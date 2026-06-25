@@ -1,4 +1,4 @@
-enum class {
+enum class Color{
     RED,
     YELLOW,
     GREEN,

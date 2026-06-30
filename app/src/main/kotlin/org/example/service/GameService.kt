@@ -12,7 +12,7 @@ class GameService(private val rootService:RootService) : AbstractRefreshingServi
         require(players.distinct().size == players.size) {"there is a name twice"}
         val game = Wizzard(players = players, currentPlayer = 0)
 
-        createDrawStack
+        createDrawStack()
 
         rootService.currentGame = game
 
@@ -28,14 +28,16 @@ class GameService(private val rootService:RootService) : AbstractRefreshingServi
     }
 
     private fun nextPlayer(){
-        rootService.currentGame.currentPlayer++ % players.size()
+        rootService.currentGame.currentPlayer++ % rootService.currentGame.players.size()
+
+        rootService.refreshAfterNextPlayer()
     }
 
     private fun createDrawStack() {
         val game = requireNotNull(rootService.currentGame)
 
         game.drawStack = Value.entries.flatMap { value ->
-        Color.entries.map { color />
+        Color.entries.map { color ->
         Card(value, color)
         }
         }.toMutableList()
@@ -57,10 +59,19 @@ class GameService(private val rootService:RootService) : AbstractRefreshingServi
         game.round++
         serveCards()
         trump = drawStack.removeLast().Color
+        for(player in players) player.roundwins = 0
+    }
+
+    private fun findWinner(){
+
+    }
+
+    private fun endRound(){
+        
     }
 
     private fun calculatePoints(){
-        val totalPointsAll = mutableListOf()
+        var totalPointsAll = mutableListOf()
         for(player in players){
             val totalPoints = 0
             for(point in Player.points){
@@ -69,5 +80,15 @@ class GameService(private val rootService:RootService) : AbstractRefreshingServi
             totalPointsAll[player]=totalPoints
         }
         onAllRefreshables(refreshAfterEndGame(totalPointsAll))
+    }
+
+    private fun calculateRound(round){
+        for(player in players){
+            if(player.trick == player.roundwins){
+                player.points += player.trick + 20
+            } else {
+                player.points += player.trick - player.roundwins
+            }
+        }
     }
 }
